@@ -260,12 +260,15 @@ bootstrap_estimates_1 <- bootstrap_results_1$t
 
 #Q-Q plot
 
-## Distribuição antes do bootstrap - Q-Q Plot original
-qqnorm(DB$PHYSICAL.FUNCTION..0.100._T1, main = "Q-Q Plot Original")
+# Distribuição antes do bootstrap - Q-Q Plot original
+qqnorm(DB$PHYSICAL.FUNCTION..0.100._T1, main = "Q-Q Plot Original", 
+       ylab = "Quantis da amostra", xlab = "Quantis teóricos")
 qqline(DB$PHYSICAL.FUNCTION..0.100._T1, col = "red")
 
+
 ## Q-Q Plot após o bootstrap - usando as estimativas do bootstrap (5.000)
-qqnorm(bootstrap_estimates_1, main = "Q-Q Plot Após Bootstrap (5.000)")
+qqnorm(bootstrap_estimates_1, main = "Q-Q Plot após Bootstrap (5.000)",
+       ylab = "Quantis da amostra", xlab = "Quantis teóricos")
 qqline(bootstrap_estimates_1, col = "blue")
 
 
@@ -274,30 +277,32 @@ qqline(bootstrap_estimates_1, col = "blue")
 # Bootstrap 5.000
 
 ## Função para realizar o bootstrap não paramétrico (5.000)
-bootstrap_function_3 <- function(data, indices) {
+bootstrap_function_2 <- function(data, indices) {
   ## Subamostra com reamostragens
-  data_bootstrap_3 <- data[indices, ]
+  data_bootstrap_2 <- data[indices, ]
   
   ## Exemplo usando a média para reamostragem
-  return(mean(data_bootstrap_3$Depressão_ponts_T1)) 
+  return(mean(data_bootstrap_2$Depressão_ponts_T1)) 
 }
 
 ## Realizando o bootstrap não paramétrico
 set.seed(123)
-bootstrap_results_3 <- boot(data = DB, statistic = bootstrap_function_3, R = 1000)
+bootstrap_results_2 <- boot(data = DB, statistic = bootstrap_function_2, R = 5000)
 
 ## Estimativas do bootstrap (média das amostras reamostradas)
-bootstrap_estimates_3 <- bootstrap_results_3$t
+bootstrap_estimates_2 <- bootstrap_results_2$t
 
 #Q-Q plot
 
 ## Distribuição antes do bootstrap - Q-Q Plot original
-qqnorm(DB$Depressão_ponts_T1, main = "Q-Q Plot Original")
+qqnorm(DB$Depressão_ponts_T1, main = "Q-Q Plot Original",
+       ylab = "Quantis da amostra", xlab = "Quantis teóricos")
 qqline(DB$Depressão_ponts_T1, col = "red")
 
-## Q-Q Plot após o bootstrap - usando as estimativas do bootstrap (1.000)
-qqnorm(bootstrap_estimates_3, main = "Q-Q Plot Após Bootstrap (1.000)")
-qqline(bootstrap_estimates_3, col = "blue")
+## Q-Q Plot após o bootstrap - usando as estimativas do bootstrap (5.000)
+qqnorm(bootstrap_estimates_2, main = "Q-Q Plot após Bootstrap (5.000)",
+       ylab = "Quantis da amostra", xlab = "Quantis teóricos")
+qqline(bootstrap_estimates_2, col = "blue")
 
 # Modelos univariados
 
