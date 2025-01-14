@@ -1,3 +1,308 @@
+#################
+# Análises Dança
+#################
+
+# Pré análise
+
+# Importação de pacotes
+library(ggplot2)
+library(dplyr)
+library(rlang)
+library(ggalluvial)
+library(patchwork)
+
+# Versão do R
+R.version.string
+
+# Versão dos pacotes 
+packageVersion("ggplot2")
+packageVersion("dplyr")
+
+# Função para monstar uma lista com "nome do pacote (versão do pacote)"
+
+  ## Lista de pacotes
+  packages <- c("ggplot2","dplyr")
+
+  ## Função para obter o nome do pacote e a versão
+  get_package_version <- function(pkg) {
+    version <- as.character(packageVersion(pkg))
+    return(paste(pkg, "(", version, ")", sep = ""))
+  }
+
+  ## Aplicar a função a cada pacote e imprimir o resultado
+  versions <- sapply(packages, get_package_version)
+  cat(versions, sep = "\n")
+
+# Importar Matriz com tratamento de NA
+Matriz <- read.csv2("C:/Users/Gabriel Costa/Desktop/Analises danca Julia/T1_T2_danca.csv", 
+                    stringsAsFactors = TRUE, na.strings = c("", "NA"))
+
+# Número de observações na Matriz
+num_observacoes <- nrow(Matriz)
+print(num_observacoes)
+
+# Listando nomes das variáveis
+
+  ## Todas as variáveis
+  nome_todas_variaveis <- colnames(Matriz)
+  nome_todas_variaveis
+
+# Modificar as variáveis no banco de dados
+DB <- Matriz %>%
+  mutate(
+    # Converter para quantitativas contínuas
+    dplyr::across(c(Idade,
+                    Capacidade_funcional_12, 
+                    Limitacao_por_aspectos_fisicos_12,
+                    Dor_12,
+                    Estado_geral_de_saude_12,
+                    Vitalidade_12,
+                    Aspectos_sociais_12,
+                    Aspectos_emocionais_12,
+                    Saude_mental_12,
+                    Capacidade_funcional_36, 
+                    Limitacao_por_aspectos_fisicos_36,
+                    Dor_36,
+                    Estado_geral_de_saude_36,
+                    Vitalidade_36,
+                    Aspectos_sociais_36,
+                    Aspectos_emocionais_36,
+                    Saude_mental_36,
+                    Depressao_ponts, 
+                    Ansiedade_ponts, 
+                    Estresse_ponts, 
+                    AF_vigorosa.sem,
+                    AF_moderada.sem,
+                    Caminhada.sem,
+                    total_AF_min.sem,
+                    Sentado_min.sem,
+                    Peso,
+                    IMC,
+                    Cintura,
+                    Quadril,
+                    RCQ,
+                    Sentar_alcancar_final,
+                    Maos_costas_final,
+                    Sentar_e_levantar,
+                    Flexao_de_cotovelo,
+                    Agil_equil_final,
+                    Caminhada_6.), as.numeric),
+    
+    # Converter para categóricas
+    dplyr::across(c(Tempo,
+                    ID,
+                    Raca.cor_da_pele,
+                    Sexo_biologico,
+                    Escolaridade,
+                    Ocupacao,
+                    Depressao_risco,
+                    Ansiedade_risco,
+                    Estresse_risco,
+                    IPAQ_class, 
+                    IMC_class,
+                    RCQ_class,
+                    Sentar_alcancar_class,
+                    Maos_costas_class,
+                    Sentar_e_levantar_class,
+                    Flexao_de_cotovelo_class,
+                    Agil_equil_class,
+                    Caminhada_6._class), as.factor)
+  )
+
+## Ordenar categorias
+DB$IMC_class <- factor(DB$IMC_class, levels = c("Obesidade", "Sobrepeso", "Eutrofia"))
+DB$IPAQ.class <- factor(DB$IPAQ_class, levels = c("LOW", "MODERATE", "HIGH"))
+
+
+
+
+
+# CRIAR SUBSET SÓ COM T1 E FAZER A DESCRITIVA DE CARACTERIZAÇÃO
+
+
+
+
+ 
+# Gráficos var categóricas
+
+  # Lista das variáveis categóricas
+  variaveis_categoricas <- c("Depressao_risco", "Ansiedade_risco", "Estresse_risco",
+                             "IPAQ_class", "IMC_class", "RCQ_class",
+                             "Sentar_alcancar_class", "Maos_costas_class",
+                             "Sentar_e_levantar_class", "Flexao_de_cotovelo_class",
+                             "Agil_equil_class", "Caminhada_6._class")
+
+  # Loop para gerar gráficos para cada variável
+  for (variavel in variaveis_categoricas) {
+    dados_fluxo <- DB %>%
+      select(ID, Tempo, !!sym(variavel)) %>%
+      tidyr::pivot_wider(names_from = Tempo, values_from = !!sym(variavel))
+  
+    p <- ggplot(dados_fluxo,
+                aes(axis1 = T1, axis2 = T2)) +
+      geom_alluvium(aes(fill = T1), width = 0.25) +
+      geom_stratum(width = 0.25, fill = "gray", color = "black") +
+      geom_text(stat = "stratum", aes(label = after_stat(stratum))) +
+      scale_x_discrete(limits = c("Pré-Intervenção", "Pós-Intervenção"), expand = c(.1, .1)) +
+      labs(title = paste("Fluxo da variável", variavel, "- Pré e Pós-Intervenção"),
+           x = "Momento",
+           y = "Número de Participantes") +
+      theme_minimal() +
+      theme(legend.position = "none")
+  
+    print(p)
+  }
+
+# Gráficos variáveis contínuas
+  
+  variaveis <- c("Capacidade_funcional_12", 
+                 "Limitacao_por_aspectos_fisicos_12",
+                 "Dor_12",
+                 "Estado_geral_de_saude_12",
+                 "Vitalidade_12",
+                 "Aspectos_sociais_12",
+                 "Aspectos_emocionais_12",
+                 "Saude_mental_12",
+                 "Capacidade_funcional_36", 
+                 "Limitacao_por_aspectos_fisicos_36",
+                 "Dor_36",
+                 "Estado_geral_de_saude_36",
+                 "Vitalidade_36",
+                 "Aspectos_sociais_36",
+                 "Aspectos_emocionais_36",
+                 "Saude_mental_36",
+                 "Depressao_ponts", 
+                 "Ansiedade_ponts", 
+                 "Estresse_ponts", 
+                 "AF_vigorosa.sem", 
+                 "AF_moderada.sem", 
+                 "Caminhada.sem", 
+                 "total_AF_min.sem", 
+                 "Sentado_min.sem", 
+                 "Peso", 
+                 "IMC", 
+                 "Cintura", 
+                 "Quadril", 
+                 "RCQ", 
+                 "Sentar_alcancar_final", 
+                 "Maos_costas_final", 
+                 "Sentar_e_levantar", 
+                 "Flexao_de_cotovelo", 
+                 "Agil_equil_final", 
+                 "Caminhada_6.")
+  
+  rotulos <- c("Capacidade funcional (SF-12)",
+               "Limitação por aspectos físicos (SF-12)",
+               "Dor (SF-12)",
+               "Estado geral de saúde (SF-12)",
+               "Vitalidade (SF-12)",
+               "Aspectos sociais (SF-12)",
+               "Aspectos emocionais (SF-12)",
+               "Saúde mental (SF-12)",
+               "Capacidade funcional (SF-36)",
+               "Limitação por aspectos físicos (SF-36)",
+               "Dor (SF-36)",
+               "Estado geral de saúde (SF-36)",
+               "Vitalidade (SF-36)",
+               "Aspectos sociais (SF-36)",
+               "Aspectos emocionais (SF-36)",
+               "Saude mental (SF-36)",
+               "Depressão (DASS-21)",
+               "Ansiedade (DASS-21)",
+               "Estresse (DASS-21)",
+               "AF vigorosa (min/sem)",
+               "AF moderada (min/sem)",
+               "Caminhada (min/sem)",
+               "Total AF min (min/sem)",
+               "Tempo sentado (min/sem)",
+               "Peso (kg)",
+               "Índice de massa corporal",
+               "Cintura (cm)",
+               "Quadril (cm)",
+               "Relação cintura-quadril",
+               "Sentar e alcancar (cm)",
+               "Mãos nas costas (cm)",
+               "Sentar e levantar (rep)",
+               "Flexão de cotovelo (rep)",
+               "Agilidade e equilíbrio (s)",
+               "Caminhada de 6min (m)")
+  
+  df_rotulos <- data.frame(variaveis, rotulos, stringsAsFactors = FALSE)
+  
+  plot_variavel <- function(var) {
+    rotulo <- df_rotulos$rotulos[df_rotulos$variaveis == var]
+    
+    # Calcular o delta relativo para cada ID com tratamento de T1 = 0
+    delta_data <- DB %>%
+      filter(Tempo %in% c("T1", "T2")) %>%
+      select(ID, Tempo, !!sym(var)) %>%
+      spread(Tempo, !!sym(var)) %>%
+      mutate(delta_relativo = case_when(
+        T1 == 0 & is.na(T2) ~ NA_real_,
+        T1 != 0 & is.na(T2) ~ NA_real_,
+        T1 == 0 & T2 == 0 ~ 0,
+        !is.na(T1) & is.na(T2) ~ NA_real_,
+        TRUE ~ ((abs(T2) - abs(T1)) / T1) * 100,
+      ))
+    
+    # Remover valores NA ou ajustar conforme necessário
+    delta_data <- delta_data %>% mutate(delta_relativo = ifelse(is.na(delta_relativo), NA, delta_relativo))
+    
+    # Inverter a ordem dos IDs
+    delta_data$ID <- factor(delta_data$ID, levels = rev(unique(delta_data$ID)))
+    
+    n_ids <- length(unique(DB$ID))
+    cores <- scales::hue_pal()(n_ids)
+    names(cores) <- unique(DB$ID)
+    
+    dodge <- position_dodge(width = 0.3)  # Definir a largura do deslocamento
+    
+    p1 <- ggplot(DB, aes(x = Tempo, y = !!sym(var), group = ID, color = ID)) +
+      geom_point(size = 3, position = dodge) +
+      geom_line(size = 1, position = dodge) +
+      scale_color_manual(values = cores) +
+      labs(title = "Mudanças Pré e Pós Intervenção",
+           x = "Tempo",
+           y = rotulo) +
+      theme_minimal()
+    
+    p2 <- ggplot(delta_data, aes(y = ID, x = delta_relativo, fill = ID)) +
+      geom_bar(stat = "identity", color = "black") +
+      geom_text(aes(label = paste0(round(delta_relativo, 0), "%")), 
+                hjust = ifelse(delta_data$delta_relativo > 0, 1.1, -0.2), 
+                color = "black") +
+      scale_fill_manual(values = cores) +
+      labs(title = "Mudança Relativa (%)",
+           x = "Delta Relativo (%)",
+           y = "ID") +
+      theme_minimal() +
+      theme(axis.text.y = element_blank(),
+            axis.ticks.y = element_blank())
+    
+    combined_plot <- p1 + p2
+    return(combined_plot)
+  }
+  
+  pasta_destino <- "C:/Users/Gabriel Costa/Desktop/Analises danca Julia/Figuras"
+  
+  for (var in variaveis) {
+    file_name <- paste0(gsub("[^[:alnum:]_]", "_", var), ".svg")
+    caminho_completo <- file.path(pasta_destino, file_name)
+    
+    ggsave(filename = caminho_completo,
+           plot = plot_variavel(var),
+           width = 10,
+           height = 6,
+           device = "svg")
+    print(plot_variavel(var))
+  }
+
+
+
+###################
+# Análises Extensão
+###################
+
 # Pré análise
 
 # Importação de pacotes
@@ -260,17 +565,44 @@ bootstrap_estimates_1 <- bootstrap_results_1$t
 
 #Q-Q plot
 
-# Distribuição antes do bootstrap - Q-Q Plot original
+## Distribuição antes do bootstrap - Q-Q Plot original
 qqnorm(DB$PHYSICAL.FUNCTION..0.100._T1, main = "Q-Q Plot Original", 
-       ylab = "Quantis da amostra", xlab = "Quantis teóricos")
+       ylab = "Quantis da amostra",
+       xlab = "Quantis teóricos")
 qqline(DB$PHYSICAL.FUNCTION..0.100._T1, col = "red")
 
 
 ## Q-Q Plot após o bootstrap - usando as estimativas do bootstrap (5.000)
 qqnorm(bootstrap_estimates_1, main = "Q-Q Plot após Bootstrap (5.000)",
-       ylab = "Quantis da amostra", xlab = "Quantis teóricos")
+       ylab = "Quantis da amostra",
+       xlab = "Quantis teóricos")
 qqline(bootstrap_estimates_1, col = "blue")
 
+# HIstograma
+
+## Histograma variável original
+
+histograma_PHYSICAL_original <- hist(DB$PHYSICAL.FUNCTION..0.100._T1,
+                                     prob=TRUE,
+                                     col="lightblue",
+                                     xlab="Função física (original)",
+                                     ylab = "Densidade",
+                                     main="Histograma com curva de densidade")
+curva_densidade_PHYSICAL_original <- lines(density(DB$PHYSICAL.FUNCTION..0.100._T1),
+                                           col="red",
+                                           lwd=2)
+
+## Histograma do bootstrap
+
+histograma_PHYSICAL_bootstrap <- hist(bootstrap_estimates_1,
+                                     prob=TRUE,
+                                     col="lightblue",
+                                     xlab="Função física (bootstrap)",
+                                     ylab = "Densidade",
+                                     main="Histograma com curva de densidade")
+curva_densidade_PHYSICAL_bootstrap <- lines(density(bootstrap_estimates_1),
+                                           col="red",
+                                           lwd=2)
 
 # Comparando a distribuição da "Depressão points" bruta e via bootstrap
 
@@ -296,13 +628,41 @@ bootstrap_estimates_2 <- bootstrap_results_2$t
 
 ## Distribuição antes do bootstrap - Q-Q Plot original
 qqnorm(DB$Depressão_ponts_T1, main = "Q-Q Plot Original",
-       ylab = "Quantis da amostra", xlab = "Quantis teóricos")
+       ylab = "Quantis da amostra",
+       xlab = "Quantis teóricos")
 qqline(DB$Depressão_ponts_T1, col = "red")
 
 ## Q-Q Plot após o bootstrap - usando as estimativas do bootstrap (5.000)
 qqnorm(bootstrap_estimates_2, main = "Q-Q Plot após Bootstrap (5.000)",
-       ylab = "Quantis da amostra", xlab = "Quantis teóricos")
+       ylab = "Quantis da amostra",
+       xlab = "Quantis teóricos")
 qqline(bootstrap_estimates_2, col = "blue")
+
+# HIstograma
+
+## Histograma variável original
+
+histograma_PHYSICAL_original <- hist(DB$Depressão_ponts_T1,
+                                     prob=TRUE,
+                                     col="lightblue",
+                                     xlab="Depressão (original)",
+                                     ylab = "Densidade",
+                                     main="Histograma com curva de densidade")
+curva_densidade_PHYSICAL_original <- lines(density(DB$Depressão_ponts_T1),
+                                           col="red",
+                                           lwd=2)
+
+## Histograma do bootstrap
+
+histograma_PHYSICAL_bootstrap <- hist(bootstrap_estimates_2,
+                                      prob=TRUE,
+                                      col="lightblue",
+                                      xlab="Depressão (bootstrap)",
+                                      ylab = "Densidade",
+                                      main="Histograma com curva de densidade")
+curva_densidade_PHYSICAL_bootstrap <- lines(density(bootstrap_estimates_2),
+                                            col="red",
+                                            lwd=2)
 
 # Modelos univariados
 
